@@ -1,5 +1,4 @@
-["""
-Luraph v14.7 / v14.8 / v14.9 deobfuscator — Railway Flask wrapper.
+[# Luraph v14.7 / v14.8 / v14.9 deobfuscator — Railway Flask wrapper.
 
 Modes:
   normal      — full pipeline (hooks + devirt)
@@ -12,7 +11,6 @@ Timeout fixes for large files (13MB+):
   - Per-run STALL raised to 90s (monkey-patched into harness)
   - Spin watchdog always enabled from run 1 (DEOB_SPIN_LATE unset)
   - Budget raised to 120s
-"""
 
 import os
 import sys
