@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-RUN git clone https://github.com/KryptIT/luraph-v15-v14.x-deobfuscator.git .
+COPY . .
 
 RUN git clone https://github.com/luau-lang/luau.git /luau && \
     cd /luau && mkdir build && cd build && \
@@ -19,13 +19,11 @@ RUN cp /luau/build/luau /app/Deobfuscator/deobf/bin/luau && \
     cp /luau/build/luau-ast /app/Deobfuscator/deobf/bin/luau-ast && \
     chmod +x /app/Deobfuscator/deobf/bin/luau*
 
-RUN sed -i 's/luau\.exe/luau/g' /app/Deobfuscator/deobf/harness.py && \
-    sed -i 's/luau-compile\.exe/luau-compile/g' /app/Deobfuscator/deobf/harness.py && \
-    sed -i 's/luau-analyze\.exe/luau-analyze/g' /app/Deobfuscator/deobf/harness.py && \
-    sed -i 's/luau-ast\.exe/luau-ast/g' /app/Deobfuscator/deobf/harness.py
+RUN sed -i 's/luau\.exe/luau/g' /app/Deobfuscator/deobf/bin/harness.py && \
+    sed -i 's/luau-compile\.exe/luau-compile/g' /app/Deobfuscator/deobf/bin/harness.py && \
+    sed -i 's/luau-analyze\.exe/luau-analyze/g' /app/Deobfuscator/deobf/bin/harness.py && \
+    sed -i 's/luau-ast\.exe/luau-ast/g' /app/Deobfuscator/deobf/bin/harness.py
 
 RUN pip install flask
-
-COPY main.py .
 
 CMD ["python", "main.py"]
