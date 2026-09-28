@@ -2,7 +2,11 @@ from flask import Flask, request, jsonify
 import subprocess, tempfile, os
 
 app = Flask(__name__)
-DEOBF_PATH = "/root/luraph-v15-v14.x-deobfuscator/Deobfuscator/deobf"
+DEOBF_PATH = "/app/Deobfuscator/deobf"
+
+@app.route("/")
+def index():
+    return "deobfuscator online", 200
 
 @app.route("/deobf", methods=["POST"])
 def deobf():
