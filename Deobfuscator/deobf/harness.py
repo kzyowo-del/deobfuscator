@@ -4,7 +4,7 @@ returns what it did. Shared by every obfuscator plugin.
 
 The harness is one Luau file: a few locals (the script, the config, recorded
 Path2D answers, instrumented loadstring'd chunks, data tables) followed by
-envlog.luau. It runs in the real Luau VM (bin/luau.exe), in a long-lived
+envlog.luau. It runs in the real Luau VM (bin/luau), in a long-lived
 REPL process (HarnessServer), or in Roblox Studio (StudioBridge, --studio).
 Its stdout holds the rendered trace between \\0ENVLOG-BEGIN and
 \\0ENVLOG-END, plus machine-readable lines (`\\0NAME ...`).
@@ -26,7 +26,7 @@ LUAU_URL = "https://github.com/luau-lang/luau/releases/latest/download/luau-wind
 
 
 def find_luau():
-    exe = "luau.exe" if os.name == "nt" else "luau"
+    exe = "luau" if os.name == "nt" else "luau"
     local = os.path.join(BIN, exe)
     if os.path.exists(local):
         return local
@@ -44,7 +44,7 @@ def find_luau():
     zpath = os.path.join(BIN, "luau.zip")
     urllib.request.urlretrieve(LUAU_URL, zpath)
     with zipfile.ZipFile(zpath) as z:
-        for name in ("luau.exe", "luau-ast.exe"):
+        for name in ("luau", "luau-ast"):
             z.extract(name, BIN)
     os.remove(zpath)
     return local
@@ -52,7 +52,7 @@ def find_luau():
 
 def luau_ast():
     """Path of luau-ast (prints a file's AST as JSON; decode it as latin-1)."""
-    return os.path.join(BIN, "luau-ast.exe" if os.name == "nt" else "luau-ast")
+    return os.path.join(BIN, "luau-ast" if os.name == "nt" else "luau-ast")
 
 
 def long_string(s):
@@ -269,7 +269,7 @@ def save_raw(path):
 class HarnessServer:
     """One harness process kept alive for many dumps: the script runs once,
     then each request only repeats the dump for new force_req / force_buf
-    (CHAIN.serve in envlog.luau). luau.exe has no file or stdin API,
+    (CHAIN.serve in envlog.luau). luau has no file or stdin API,
     but its REPL reads statements from stdin and require() reads files: the
     harness is require()d (it returns CHAIN.serve) and every request is a small
     module holding the long strings, called by a one-line statement.
@@ -515,7 +515,7 @@ def run_once_studio(bridge, source, cfg, timeout, chunks=None):
 
 
 class Runner:
-    """Runs harnesses for one job: offline with luau.exe, or in Studio with
+    """Runs harnesses for one job: offline with luau, or in Studio with
     --studio (writes the loader next to the output and waits for it)."""
 
     def __init__(self, job):

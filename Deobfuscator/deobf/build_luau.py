@@ -75,7 +75,7 @@ def main():
     run(cfg)
     run(["cmake", "--build", build, "--config", "Release", "--target", "Luau.Repl.CLI",
          "--parallel"])
-    exe = "luau.exe" if os.name == "nt" else "luau"
+    exe = "luau" if os.name == "nt" else "luau"
     for cand in (os.path.join(build, "Release", exe), os.path.join(build, exe)):
         if os.path.exists(cand):
             os.makedirs(BIN, exist_ok=True)
