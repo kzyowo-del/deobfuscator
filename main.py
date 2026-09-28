@@ -1,10 +1,10 @@
-[# Luraph v14.7 / v14.8 / v14.9 deobfuscator — Railway Flask wrapper.
+[# Luraph v14.7 / v14.8 / v14.9 deobfuscator -- Railway Flask wrapper.
 
 Modes:
-  normal      — full pipeline (hooks + devirt)
-  no-hooks    — skip VM closure instrumentation (no anti-tamper attribution)
-  no-devirt   — trace only, no lifting
-  trace-only  — alias for no-devirt
+  normal      -- full pipeline (hooks + devirt)
+  no-hooks    -- skip VM closure instrumentation (no anti-tamper attribution)
+  no-devirt   -- trace only, no lifting
+  trace-only  -- alias for no-devirt
 
 Timeout fixes for large files (13MB+):
   - Global timeout raised to 300s
@@ -43,7 +43,7 @@ if str(DEOBF_BIN) not in sys.path:
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Monkey-patch harness.STALL before importing anything that uses it.
-# Default is 20s — way too short for 13MB files.
+# Default is 20s -- way too short for 13MB files.
 # ─────────────────────────────────────────────────────────────────────────────
 import harness as _harness_mod
 _harness_mod.STALL = int(os.environ.get("DEOBF_STALL", "90"))
@@ -184,7 +184,7 @@ HTML = """<!DOCTYPE html>
 <body>
 <div class="container">
   <h1>Luraph Deobfuscator</h1>
-  <p class="sub">v14.7 / v14.8 / v14.9 — powered by KryptIT engine</p>
+  <p class="sub">v14.7 / v14.8 / v14.9 -- powered by KryptIT engine</p>
 
   <label>Upload File (.lua / .luau / .txt)</label>
   <div class="drop-zone" id="dropZone">
@@ -205,7 +205,7 @@ HTML = """<!DOCTYPE html>
     <div class="mode-card" data-mode="no-hooks" onclick="selectMode(this)">
       <input type="radio" name="mode" value="no-hooks">
       <div class="mode-title">No Hooks</div>
-      <div class="mode-desc">Skip VM closure instrumentation — use when stuck in loop on run 1</div>
+      <div class="mode-desc">Skip VM closure instrumentation -- use when stuck in loop on run 1</div>
     </div>
     <div class="mode-card" data-mode="no-devirt" onclick="selectMode(this)">
       <input type="radio" name="mode" value="no-devirt">
@@ -215,7 +215,7 @@ HTML = """<!DOCTYPE html>
     <div class="mode-card" data-mode="no-hooks-no-devirt" onclick="selectMode(this)">
       <input type="radio" name="mode" value="no-hooks-no-devirt">
       <div class="mode-title">No Hooks + Trace</div>
-      <div class="mode-desc">No instrumentation, trace output only — maximum compatibility</div>
+      <div class="mode-desc">No instrumentation, trace output only -- maximum compatibility</div>
     </div>
   </div>
 
@@ -310,7 +310,7 @@ async function runDeobf() {
     } else if (data.output) {
       resultBox.style.display = 'block';
       resultText.value = data.output;
-      log('[+] done — ' + data.output.length + ' chars output');
+      log('[+] done -- ' + data.output.length + ' chars output');
     }
   } catch (e) {
     errorBox.style.display = 'block';
@@ -380,7 +380,7 @@ def deobf():
             output=None,
             engine=version,
             engine_resolved=version,
-            # timing — raised for large files
+            # timing -- raised for large files
             timeout=300.0,
             budget=120.0,
             # executor
@@ -425,14 +425,14 @@ def deobf():
 
         job = Job(args, inp, source, job_workdir)
 
-        # Run engine — may take a while on 13MB files
+        # Run engine -- may take a while on 13MB files
         log(f"[*] starting engine...")
         result_path_str = engine.deobfuscate(job)
 
         if not result_path_str:
             return jsonify({
                 "log": "\n".join(log_lines),
-                "error": "[!] engine returned no output — check server logs"
+                "error": "[!] engine returned no output -- check server logs"
             })
 
         result_path = Path(result_path_str)
