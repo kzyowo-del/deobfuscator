@@ -1,9 +1,8 @@
-from flask import Flask, request, jsonify, render_template_string
+from flask import Flask, request, jsonify, render_template_string, Response
 import subprocess, tempfile, os
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024
-
 DEOBF_PATH = "/app/Deobfuscator/deobf"
 
 HTML = """<!DOCTYPE html>
@@ -14,74 +13,164 @@ HTML = """<!DOCTYPE html>
 <title>Luraph Deobfuscator</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: #0d0d0d; color: #e0e0e0; font-family: monospace; padding: 20px; }
-h1 { color: #00ff88; margin-bottom: 20px; font-size: 1.3em; }
-.box { background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
-label { color: #888; font-size: 0.85em; display: block; margin-bottom: 8px; }
-input[type=file] { width: 100%; color: #e0e0e0; background: #111; border: 1px solid #444; border-radius: 4px; padding: 8px; }
-.btn-row { display: flex; gap: 10px; margin-top: 12px; }
-button { flex: 1; padding: 12px; border: none; border-radius: 6px; font-family: monospace; font-size: 0.9em; cursor: pointer; font-weight: bold; }
+body { background: #0d0d0d; color: #e0e0e0; font-family: monospace; padding: 16px; min-height: 100vh; }
+h1 { color: #00ff88; margin-bottom: 16px; font-size: 1.2em; letter-spacing: 2px; }
+.card { background: #141414; border: 1px solid #2a2a2a; border-radius: 10px; padding: 14px; margin-bottom: 14px; }
+label { color: #555; font-size: 0.75em; display: block; margin-bottom: 6px; letter-spacing: 1px; }
+textarea {
+  width: 100%; background: #0a0a0a; color: #00ff88;
+  border: 1px solid #2a2a2a; border-radius: 6px;
+  padding: 10px; font-family: monospace; font-size: 0.72em;
+  resize: vertical; min-height: 160px; outline: none;
+}
+textarea:focus { border-color: #00ff88; }
+input[type=file] {
+  width: 100%; color: #aaa; background: #0a0a0a;
+  border: 1px solid #2a2a2a; border-radius: 6px;
+  padding: 8px; font-size: 0.8em;
+}
+.tabs { display: flex; gap: 8px; margin-bottom: 10px; }
+.tab {
+  padding: 6px 14px; border-radius: 4px; cursor: pointer;
+  font-size: 0.8em; border: 1px solid #333; background: #1a1a1a; color: #666;
+}
+.tab.active { background: #00ff88; color: #000; border-color: #00ff88; font-weight: bold; }
+.btn-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+button {
+  flex: 1; min-width: 80px; padding: 11px 8px;
+  border: none; border-radius: 6px;
+  font-family: monospace; font-size: 0.85em;
+  cursor: pointer; font-weight: bold; letter-spacing: 1px;
+}
 #deobfBtn { background: #00ff88; color: #000; }
-#clearBtn { background: #333; color: #e0e0e0; }
-#copyBtn { background: #0088ff; color: #fff; }
-#status { color: #ffaa00; font-size: 0.85em; margin-top: 10px; min-height: 20px; }
-#output { width: 100%; min-height: 300px; background: #111; color: #00ff88; border: 1px solid #333; border-radius: 6px; padding: 12px; font-family: monospace; font-size: 0.75em; resize: vertical; white-space: pre; overflow: auto; }
-.log { color: #666; font-size: 0.75em; margin-top: 8px; white-space: pre-wrap; max-height: 120px; overflow-y: auto; }
+#deobfBtn:disabled { background: #1a4a30; color: #444; cursor: wait; }
+#clearBtn { background: #1e1e1e; color: #aaa; border: 1px solid #333; }
+#copyBtn { background: #0055cc; color: #fff; }
+#dlBtn { background: #660066; color: #fff; }
+#status { font-size: 0.8em; margin-top: 8px; min-height: 18px; }
+#log { color: #444; font-size: 0.7em; margin-top: 8px; white-space: pre-wrap; max-height: 100px; overflow-y: auto; }
+.hidden { display: none; }
+.spinner { display: inline-block; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
-<h1>⚡ Luraph Deobfuscator</h1>
-<div class="box">
-  <label>SELECT .LUA FILE (max 50MB)</label>
-  <input type="file" id="fileInput" accept=".lua,.luau">
+<h1>⚡ LURAPH DEOBFUSCATOR</h1>
+
+<div class="card">
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('file')">📁 FILE</div>
+    <div class="tab" onclick="switchTab('text')">📝 PASTE TEXT</div>
+  </div>
+
+  <div id="fileTab">
+    <label>SELECT .LUA / .TXT FILE (MAX 50MB)</label>
+    <input type="file" id="fileInput" accept=".lua,.luau,.txt">
+  </div>
+
+  <div id="textTab" class="hidden">
+    <label>PASTE OBFUSCATED CODE HERE</label>
+    <textarea id="textInput" placeholder="-- paste luraph obfuscated code here..."></textarea>
+  </div>
+
   <div class="btn-row">
-    <button id="deobfBtn" onclick="deobf()">DEOBF</button>
-    <button id="clearBtn" onclick="clearAll()">CLEAR</button>
+    <button id="deobfBtn" onclick="deobf()">▶ DEOBF</button>
+    <button id="clearBtn" onclick="clearAll()">✕ CLEAR</button>
   </div>
   <div id="status"></div>
 </div>
-<div class="box">
+
+<div class="card">
   <label>OUTPUT</label>
-  <textarea id="output" readonly placeholder="// result appears here..."></textarea>
+  <textarea id="output" readonly placeholder="-- deobfuscated code appears here..."></textarea>
   <div class="btn-row">
-    <button id="copyBtn" onclick="copyOut()">COPY</button>
+    <button id="copyBtn" onclick="copyOut()">⧉ COPY</button>
+    <button id="dlBtn" onclick="downloadOut()">↓ DOWNLOAD</button>
   </div>
-  <div class="log" id="log"></div>
+  <div id="log"></div>
 </div>
+
 <script>
+let activeTab = 'file';
+
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    t.classList.toggle('active', (i===0&&tab==='file')||(i===1&&tab==='text'));
+  });
+  document.getElementById('fileTab').classList.toggle('hidden', tab !== 'file');
+  document.getElementById('textTab').classList.toggle('hidden', tab !== 'text');
+}
+
 async function deobf() {
-  const file = document.getElementById('fileInput').files[0];
-  if (!file) { setStatus('no file selected', '#ff4444'); return; }
+  const btn = document.getElementById('deobfBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner">⟳</span> WORKING...';
+
+  let fd = new FormData();
+
+  if (activeTab === 'file') {
+    const file = document.getElementById('fileInput').files[0];
+    if (!file) { setStatus('no file selected', '#ff4444'); resetBtn(); return; }
+    fd.append('file', file);
+  } else {
+    const text = document.getElementById('textInput').value.trim();
+    if (!text) { setStatus('no code pasted', '#ff4444'); resetBtn(); return; }
+    const blob = new Blob([text], { type: 'text/plain' });
+    fd.append('file', blob, 'input.lua');
+  }
+
   setStatus('uploading...', '#ffaa00');
-  const fd = new FormData();
-  fd.append('file', file);
+
   try {
-    setStatus('deobfuscating... (may take 1-3 min)', '#ffaa00');
+    setStatus('deobfuscating... (may take 1–5 min for large files)', '#ffaa00');
     const res = await fetch('/deobf', { method: 'POST', body: fd });
     const data = await res.json();
     if (data.result) {
       document.getElementById('output').value = data.result;
       document.getElementById('log').textContent = data.log || '';
-      setStatus('done ✓', '#00ff88');
+      setStatus('✓ done', '#00ff88');
     } else {
-      setStatus('failed: ' + (data.error || 'unknown'), '#ff4444');
+      setStatus('✗ failed: ' + (data.error || 'unknown'), '#ff4444');
       document.getElementById('log').textContent = data.log || '';
     }
   } catch(e) {
-    setStatus('error: ' + e.message, '#ff4444');
+    setStatus('✗ error: ' + e.message, '#ff4444');
   }
+  resetBtn();
 }
+
+function resetBtn() {
+  const btn = document.getElementById('deobfBtn');
+  btn.disabled = false;
+  btn.innerHTML = '▶ DEOBF';
+}
+
 function clearAll() {
   document.getElementById('fileInput').value = '';
+  document.getElementById('textInput').value = '';
   document.getElementById('output').value = '';
   document.getElementById('log').textContent = '';
   setStatus('', '#888');
 }
+
 function copyOut() {
-  const out = document.getElementById('output');
-  if (!out.value) { setStatus('nothing to copy', '#ff4444'); return; }
-  navigator.clipboard.writeText(out.value).then(() => setStatus('copied ✓', '#00ff88'));
+  const out = document.getElementById('output').value;
+  if (!out) { setStatus('nothing to copy', '#ff4444'); return; }
+  navigator.clipboard.writeText(out).then(() => setStatus('✓ copied', '#00ff88'));
 }
+
+function downloadOut() {
+  const out = document.getElementById('output').value;
+  if (!out) { setStatus('nothing to download', '#ff4444'); return; }
+  const blob = new Blob([out], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'deobfuscated.lua';
+  a.click();
+  setStatus('✓ downloading', '#00ff88');
+}
+
 function setStatus(msg, color) {
   const el = document.getElementById('status');
   el.textContent = msg;
