@@ -11,16 +11,18 @@ RUN git clone https://github.com/KryptIT/luraph-v15-v14.x-deobfuscator.git .
 RUN git clone https://github.com/luau-lang/luau.git /luau && \
     cd /luau && mkdir build && cd build && \
     cmake ../ -G Ninja -DCMAKE_BUILD_TYPE=Release && \
-    ninja luau luau-compile luau-analyze
+    ninja luau luau-compile luau-analyze luau-ast
 
 RUN cp /luau/build/luau /app/Deobfuscator/deobf/bin/luau && \
     cp /luau/build/luau-compile /app/Deobfuscator/deobf/bin/luau-compile && \
     cp /luau/build/luau-analyze /app/Deobfuscator/deobf/bin/luau-analyze && \
+    cp /luau/build/luau-ast /app/Deobfuscator/deobf/bin/luau-ast && \
     chmod +x /app/Deobfuscator/deobf/bin/luau*
 
 RUN sed -i 's/luau\.exe/luau/g' /app/Deobfuscator/deobf/harness.py && \
     sed -i 's/luau-compile\.exe/luau-compile/g' /app/Deobfuscator/deobf/harness.py && \
-    sed -i 's/luau-analyze\.exe/luau-analyze/g' /app/Deobfuscator/deobf/harness.py
+    sed -i 's/luau-analyze\.exe/luau-analyze/g' /app/Deobfuscator/deobf/harness.py && \
+    sed -i 's/luau-ast\.exe/luau-ast/g' /app/Deobfuscator/deobf/harness.py
 
 RUN pip install flask
 
