@@ -21,13 +21,13 @@ RUN cp /luau/build/luau /app/Deobfuscator/deobf/bin/luau && \
     cp /luau/build/luau-ast /app/Deobfuscator/deobf/bin/luau-ast && \
     chmod +x /app/Deobfuscator/deobf/bin/luau*
 
+RUN find /app/Deobfuscator -name "vmmap.py" -exec sed -i \
+    's/ROOT = os.path.dirname(os.path.dirname(HERE))/ROOT = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))/g' {} \;
+
 RUN sed -i 's/luau\.exe/luau/g' /app/Deobfuscator/deobf/bin/harness.py && \
     sed -i 's/luau-ast\.exe/luau-ast/g' /app/Deobfuscator/deobf/bin/harness.py && \
     sed -i 's/luau-compile\.exe/luau-compile/g' /app/Deobfuscator/deobf/bin/harness.py && \
     sed -i 's/luau-analyze\.exe/luau-analyze/g' /app/Deobfuscator/deobf/bin/harness.py
-
-RUN find /app/Deobfuscator -name "vmmap.py" | xargs sed -i \
-    's|os.path.join(HERE, "bin", "luau-ast"|os.path.join(HERE, "luau-ast")|g'
 
 RUN pip install flask
 
