@@ -21,7 +21,7 @@ import urllib.request
 import zipfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-BIN = os.path.join(HERE, "bin")
+BIN = HERE
 LUAU_URL = "https://github.com/luau-lang/luau/releases/latest/download/luau-windows.zip"
 
 
